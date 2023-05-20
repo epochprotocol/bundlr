@@ -5,17 +5,18 @@
  * for a simple target method, we just call the "nonce" method of the account itself.
  */
 
-import { BigNumber, Signer, Wallet } from 'ethers'
+import { BigNumber, Signer, Wallet, utils } from 'ethers'
 import { JsonRpcProvider } from '@ethersproject/providers'
 import { SimpleAccountFactory__factory } from '@account-abstraction/contracts'
 import { formatEther, keccak256, parseEther } from 'ethers/lib/utils'
 import { Command } from 'commander'
-import { erc4337RuntimeVersion } from '@account-abstraction/utils'
+import { deepHexlify, erc4337RuntimeVersion } from '@account-abstraction/utils'
 import fs from 'fs'
 import { DeterministicDeployer, HttpRpcClient, SimpleAccountAPI } from '@account-abstraction/sdk'
 import { runBundler } from '../runBundler'
 import { BundlerServer } from '../BundlerServer'
 import { getNetworkProvider } from '../Config'
+import { TestCounter__factory } from '../types'
 
 const ENTRY_POINT = '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789'
 
@@ -88,6 +89,8 @@ class Runner {
       target,
       data
     })
+    const userOp1 = deepHexlify(await utils.resolveProperties(userOp));
+    console.log("userOp1: ", JSON.stringify(userOp1));
     try {
       const userOpHash = await this.bundlerProvider.sendUserOpToBundler(userOp)
       const txid = await this.accountApi.getUserOpReceipt(userOpHash)
@@ -187,12 +190,24 @@ async function main (): Promise<void> {
   const dest = addr
   const data = keccak256(Buffer.from('entryPoint()')).slice(0, 10)
   console.log('data=', data)
-  await client.runUserOp(dest, data)
+  // await client.runUserOp(dest, data)
   console.log('after run1')
   // client.accountApi.overheads!.perUserOp = 30000
-  await client.runUserOp(dest, data)
-  console.log('after run2')
-  await bundler?.stop()
+  const CounterAddr = DeterministicDeployer.getAddress(TestCounter__factory.bytecode)
+  console.log("CounterAddr: ", CounterAddr);
+
+  const testCounter = TestCounter__factory.connect(CounterAddr, provider)
+
+  const testCounterData = await testCounter.populateTransaction.count()
+  console.log("testCounterData: ", testCounterData);
+
+  if(testCounterData.data) {
+    await client.runUserOp(CounterAddr, testCounterData.data)
+    console.log('after run2')
+    await bundler?.stop()
+
+    console.log("counters current value", (await testCounter.counters(addr)))
+  }
 }
 
 void main()
