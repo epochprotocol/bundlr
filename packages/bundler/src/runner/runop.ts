@@ -101,7 +101,7 @@ class Runner {
       target,
       data,
       advancedUserOperation: {
-        executionWindowStart: 1684917837,
+        executionWindowStart: 0,
         executionWindowEnd: 2684917837,
         readyForExecution: false,
       }
