@@ -1,8 +1,9 @@
 {
-  "name": "@account-abstraction/sdk",
+  "name": "@epoch-protocol/sdk",
   "version": "0.6.0",
   "main": "./dist/src/index.js",
   "license": "MIT",
+  "repository": "git://github.com/Abhimanyu121/bundler",
   "files": [
     "dist/src",
     "src",

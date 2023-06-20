@@ -107,6 +107,16 @@ class Runner {
   }
 
   async runUserOp(target: string, data: string): Promise<void> {
+    let nonce = (await this.accountApi.getNonce()) as BigNumber
+    let nonce2 = (await this.accountApi2.getNonce()) as BigNumber
+
+    console.log("NONCE 1:", nonce)
+    console.log("NONCE 2:", nonce2)
+
+
+
+
+
     const userOp = await this.accountApi.createSignedUserOp({
       target,
       data
@@ -118,14 +128,41 @@ class Runner {
     } catch (e: any) {
       throw this.parseExpectedGas(e)
     }
+
+
+
+
+    ////logsss
+    let _nonce = (await this.accountApi.getNonce()) as BigNumber
+
+    console.log("_NONCE 1:", _nonce)
+
+    let _nonce2 = (await this.accountApi2.getNonce()) as BigNumber
+
+    console.log("_NONCE 2:", _nonce2)
+
+    console.log("Account API 2", await this.accountApi2?.getAccountAddress())
+    console.log("Account API 2 CC", await this.accountApi2?.getCounterFactualAddress())
+    // console.log("Account API 2", await this.accountApi2?.g())
+
+    console.log("Account API 1", await this.accountApi?.getAccountAddress())
+    console.log("Account API 1 CC", await this.accountApi?.getCounterFactualAddress())
   }
   async runAdvancedUserOp(target: string, data: string): Promise<void> {
-    let nonce = (await this.accountApi2.getNonce()) as BigNumber
+    let nonce = (await this.accountApi.getNonce()) as BigNumber
+    let nonce2 = (await this.accountApi2.getNonce()) as BigNumber
+
+    console.log("NONCE 1:", nonce)
+    console.log("NONCE 2:", nonce2)
+
+
+
+
     // nonce = nonce.add(1);
     const userOp = await this.accountApi2.createSignedUserOp({
       target,
       data,
-      nonce,
+      nonce: nonce2,
       advancedUserOperation: {
         executionWindowStart: 0,
         executionWindowEnd: 2684917837,
@@ -133,6 +170,7 @@ class Runner {
       }
     })
     console.log("userOp: ", userOp);
+
     try {
       console.log("Before advanced operation")
       const userOpHash = await this.bundlerProvider.sendUserOpToBundler(userOp)
@@ -143,6 +181,26 @@ class Runner {
       console.log("Error:", e.toString());
       throw this.parseExpectedGas(e)
     }
+
+
+
+
+    ///logssssss
+    let _nonce = (await this.accountApi.getNonce()) as BigNumber
+
+    console.log("_NONCE 1:", _nonce)
+
+    let _nonce2 = (await this.accountApi2.getNonce()) as BigNumber
+
+    console.log("_NONCE 2:", _nonce2)
+
+    console.log("NONCE 1:", _nonce)
+    console.log("Account API 2", await this.accountApi2?.getAccountAddress())
+    console.log("Account API 2 CC", await this.accountApi2?.getCounterFactualAddress())
+
+    console.log("Account API 1", await this.accountApi?.getAccountAddress())
+    console.log("Account API 1 CC", await this.accountApi?.getCounterFactualAddress())
+
   }
 }
 
@@ -250,14 +308,14 @@ async function main(): Promise<void> {
 
   const data = keccak256(Buffer.from('entryPoint()')).slice(0, 10)
   console.log('data=', data)
-  // await client.runUserOp(dest, data)
-  // console.log('after run1')
+  await client.runUserOp(dest, data)
+  console.log('after run1')
   // // client.accountApi.overheads!.perUserOp = 30000
   // await client.runUserOp(dest2, data)
   // console.log('after run2')
 
-  await client.runAdvancedUserOp(dest2, data)
-  console.log('after run advanced')
+  // await client.runAdvancedUserOp(dest2, data)
+  // console.log('after run advanced')
   await bundler?.stop()
 }
 
