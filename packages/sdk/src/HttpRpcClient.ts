@@ -5,6 +5,7 @@ import { UserOperationStruct } from '@account-abstraction/contracts'
 import Debug from 'debug'
 import { deepHexlify } from '@account-abstraction/utils'
 import { AdvancedUserOperation, AdvancedUserOperationStruct } from './interfaces/IAdvancedUserOperation'
+import { IAdvancedMempoolEntry } from './interfaces/IAdvancedMempoolEntry'
 
 const debug = Debug('aa.rpc')
 
@@ -48,6 +49,18 @@ export class HttpRpcClient {
       .send('eth_sendUserOperation', [hexifiedUserOp, this.entryPointAddress])
     console.log(trx);
     return trx;
+  }
+
+  /**
+   * send a UserOperation to the bundler
+   * @param address
+   * @return returns useroperations in advanced operations mempool
+   */
+  async getUserOperations(address: string): Promise<Array<IAdvancedMempoolEntry>> {
+    const mempoolEntry: Array<IAdvancedMempoolEntry> = await this.userOpJsonRpcProvider
+      .send('eth_getUserOperations', [address])
+    console.log(mempoolEntry);
+    return mempoolEntry;
   }
 
   /**
