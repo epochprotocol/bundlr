@@ -12,6 +12,7 @@ export interface AdvancedUserOperation {
     readyForExecution?: boolean | undefined;
     triggerEvent?: TriggerEvent
 }
+
 export interface CustomUserOperationStruct extends UserOperationStruct {
     advancedUserOperation?: AdvancedUserOperation | undefined;
 };
