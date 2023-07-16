@@ -1,12 +1,11 @@
 # start a standlone bundler for testing.
 # bring up a the bundler with its own geth instance
 
-version: '2'
+version: "2"
 
 services:
-
   bundler:
-    ports: [ '3000:3000' ]
+    ports: ["3000:3000"]
     image: accountabstraction/bundler
     command: --network http://geth-dev:8545
     volumes:
@@ -21,4 +20,4 @@ services:
 
   geth-dev:
     build: geth-dev
-    ports: [ '8545:8545' ]
+    ports: ["8545:8545"]

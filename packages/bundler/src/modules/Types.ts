@@ -1,6 +1,6 @@
-import { BigNumberish } from 'ethers'
-import { NotPromise } from '@account-abstraction/utils'
-import { UserOperationStruct } from '@account-abstraction/contracts'
+import { BigNumberish } from "ethers";
+import { NotPromise } from "@account-abstraction/utils";
+import { UserOperationStruct } from "@account-abstraction/contracts";
 
 export enum ValidationErrors {
   InvalidFields = -32602,
@@ -15,27 +15,27 @@ export enum ValidationErrors {
 }
 
 export enum ExecutionErrors {
-  UserOperationReverted = -32521
+  UserOperationReverted = -32521,
 }
 
 export interface StakeInfo {
-  addr: string
-  stake: BigNumberish
-  unstakeDelaySec: BigNumberish
+  addr: string;
+  stake: BigNumberish;
+  unstakeDelaySec: BigNumberish;
 }
 
 export interface ReferencedCodeHashes {
   // addresses accessed during this user operation
-  addresses: string[]
+  addresses: string[];
 
   // keccak over the code of all referenced addresses
-  hash: string
+  hash: string;
 }
 
-export type UserOperation = NotPromise<UserOperationStruct>
+export type UserOperation = NotPromise<UserOperationStruct>;
 
 export interface SlotMap {
-  [slot: string]: string
+  [slot: string]: string;
 }
 
 /**
@@ -43,5 +43,5 @@ export interface SlotMap {
  * for each address, either a root hash, or a map of slot:value
  */
 export interface StorageMap {
-  [address: string]: string | SlotMap
+  [address: string]: string | SlotMap;
 }

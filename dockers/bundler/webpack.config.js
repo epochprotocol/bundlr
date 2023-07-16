@@ -1,5 +1,5 @@
-const path = require('path')
-const { IgnorePlugin, ProvidePlugin } = require('webpack')
+const path = require("path");
+const { IgnorePlugin, ProvidePlugin } = require("webpack");
 
 module.exports = {
   plugins: [
@@ -8,8 +8,8 @@ module.exports = {
     new IgnorePlugin({ resourceRegExp: /solidity-analyzer/ }),
     new IgnorePlugin({ resourceRegExp: /fsevents/ }),
     new ProvidePlugin({
-      WebSocket: 'ws',
-      fetch: ['node-fetch', 'default'],
+      WebSocket: "ws",
+      fetch: ["node-fetch", "default"],
     }),
   ],
   resolve: {
@@ -17,25 +17,31 @@ module.exports = {
       // the packages below has a "browser" and "main" entry. Unfortunately, webpack uses the "browser" entry,
       // even through we explicitly use set "target: node"
       // (see https://github.com/webpack/webpack/issues/4674)
-      '@ethersproject/random': path.resolve(__dirname, '../../node_modules/@ethersproject/random/lib/index.js'),
-      '@ethersproject/base64': path.resolve(__dirname, '../../node_modules/@ethersproject/base64/lib/index.js')
+      "@ethersproject/random": path.resolve(
+        __dirname,
+        "../../node_modules/@ethersproject/random/lib/index.js",
+      ),
+      "@ethersproject/base64": path.resolve(
+        __dirname,
+        "../../node_modules/@ethersproject/base64/lib/index.js",
+      ),
     },
   },
-  target: 'node',
-  entry: '../../packages/bundler/dist/src/exec.js',
-  mode: 'development',
+  target: "node",
+  entry: "../../packages/bundler/dist/src/exec.js",
+  mode: "development",
   module: {
     rules: [
       {
         test: /\.tsx?$/,
-        use: 'ts-loader',
-        exclude: /node_modules/
-      }
-    ]
+        use: "ts-loader",
+        exclude: /node_modules/,
+      },
+    ],
   },
   output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'bundler.js'
+    path: path.resolve(__dirname, "dist"),
+    filename: "bundler.js",
   },
-  stats: 'errors-only'
-}
+  stats: "errors-only",
+};

@@ -4,7 +4,7 @@
 #  HOST            | my.example.com   | Bundler rpc host address
 #  DEFAULT_EMAIL   | me@example.com   | Your e-mail for LetsEncrypt to send SSL alerts to
 
-version: '2'
+version: "2"
 
 services:
   nginx-proxy:
@@ -12,8 +12,8 @@ services:
     container_name: nginx-proxy
     restart: unless-stopped
     ports:
-      - '443:443'
-      - '80:80'
+      - "443:443"
+      - "80:80"
     volumes:
       - conf:/etc/nginx/conf.d
       - vhost:/etc/nginx/vhost.d
@@ -40,8 +40,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
   bundler:
-    container_name:   bundler
-    ports: [ '3000:3000' ]
+    container_name: bundler
+    ports: ["3000:3000"]
     image: accountabstraction/bundler:0.6.0
     restart: on-failure
 

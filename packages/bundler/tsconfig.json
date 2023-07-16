@@ -16,11 +16,7 @@
     "emitDecoratorMetadata": true,
     "sourceMap": true,
     "outDir": "dist",
-    "typeRoots": [
-      "./node_modules/@nomiclabs/hardhat-ethers"
-    ]
+    "typeRoots": ["./node_modules/@nomiclabs/hardhat-ethers"]
   },
-  "include": [
-    "src/**/*",
-  ],
+  "include": ["src/**/*"]
 }
