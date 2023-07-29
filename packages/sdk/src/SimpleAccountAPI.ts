@@ -9,6 +9,8 @@ import {
 import { arrayify, hexConcat } from "ethers/lib/utils";
 import { Signer } from "@ethersproject/abstract-signer";
 import { BaseApiParams, BaseAccountAPI } from "./BaseAccountAPI";
+import { TransactionDetailsForAdvancedUserOp } from "./TransactionDetailsForUserOp";
+import { AdvancedUserOperationStruct } from "./interfaces/IAdvancedUserOperation";
 
 /**
  * constructor params, added no top of base params:
@@ -108,6 +110,80 @@ export class SimpleAccountAPI extends BaseAccountAPI {
       value,
       data,
     ]);
+  }
+
+  /**
+   * encode a batch method call from entryPoint to our contract
+   * @param targets
+   * @param datas
+   */
+  async encodeExecuteBatch(
+    targets: string[],
+    datas: string[]
+  ): Promise<string> {
+    const accountContract = await this._getAccountContract();
+    return accountContract.interface.encodeFunctionData("executeBatch", [
+      targets,
+      datas,
+    ]);
+  }
+
+  /**
+   * helper method: create and sign a user operation.
+   * @param info transaction details for the userOp
+   */
+  async createSignedBatchUserOp(
+    infos: Array<TransactionDetailsForAdvancedUserOp>
+  ): Promise<AdvancedUserOperationStruct> {
+    const userWallet = await this.getAccountAddress();
+    const batchTxDetail: TransactionDetailsForAdvancedUserOp = {
+      target: userWallet,
+      data: "",
+      value: BigNumber.from(0),
+      gasLimit: BigNumber.from(0),
+      maxFeePerGas: BigNumber.from(0),
+      maxPriorityFeePerGas: BigNumber.from(0),
+      nonce: infos[0].nonce,
+      advancedUserOperation: infos[0].advancedUserOperation,
+    };
+
+    const datas: string[] = [];
+    const values: BigNumberish[] = [];
+    const targets: string[] = [];
+
+    infos.forEach((info) => {
+      datas.push(info.data);
+      info.value ? values.push(info.value) : BigNumber.from(0);
+      targets.push(info.target);
+
+      if (info.gasLimit) {
+        batchTxDetail.gasLimit = BigNumber.from(batchTxDetail.gasLimit).add(
+          info.gasLimit
+        );
+      }
+      if (info.maxFeePerGas) {
+        batchTxDetail.maxFeePerGas = BigNumber.from(
+          batchTxDetail.maxFeePerGas
+        ).add(info.maxFeePerGas);
+      }
+      if (info.maxPriorityFeePerGas) {
+        batchTxDetail.maxPriorityFeePerGas = BigNumber.from(
+          batchTxDetail.maxPriorityFeePerGas
+        ).add(info.maxPriorityFeePerGas);
+      }
+    });
+
+    const accountContract = await this._getAccountContract();
+    const data = accountContract.interface.encodeFunctionData("executeBatch", [
+      targets,
+      datas,
+    ]);
+
+    batchTxDetail.data = data;
+
+    return await this.signUserOp(
+      await this.createUnsignedUserOp(batchTxDetail)
+    );
   }
 
   async signUserOpHash(userOpHash: string): Promise<string> {
