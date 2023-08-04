@@ -133,7 +133,7 @@ export class SimpleAccountAPI extends BaseAccountAPI {
    * @param info transaction details for the userOp
    */
   async createSignedBatchUserOp(
-    infos: Array<TransactionDetailsForAdvancedUserOp>
+    infos: Array<TransactionDetailsForAdvancedUserOp>, nonce: BigNumberish
   ): Promise<AdvancedUserOperationStruct> {
     const userWallet = await this.getAccountAddress();
     const batchTxDetail: TransactionDetailsForAdvancedUserOp = {
@@ -143,13 +143,24 @@ export class SimpleAccountAPI extends BaseAccountAPI {
       gasLimit: BigNumber.from(0),
       maxFeePerGas: BigNumber.from(0),
       maxPriorityFeePerGas: BigNumber.from(0),
-      nonce: infos[0].nonce,
+      nonce: nonce,
       advancedUserOperation: infos[0].advancedUserOperation,
     };
 
     const datas: string[] = [];
     const values: BigNumberish[] = [];
     const targets: string[] = [];
+
+    let { maxFeePerGas, maxPriorityFeePerGas } = batchTxDetail;
+    if (maxFeePerGas == null || maxPriorityFeePerGas == null) {
+      const feeData = await this.provider.getFeeData();
+      if (maxFeePerGas == null) {
+        maxFeePerGas = feeData.maxFeePerGas ?? undefined;
+      }
+      if (maxPriorityFeePerGas == null) {
+        maxPriorityFeePerGas = feeData.maxPriorityFeePerGas ?? undefined;
+      }
+    }
 
     infos.forEach((info) => {
       datas.push(info.data);
@@ -158,19 +169,11 @@ export class SimpleAccountAPI extends BaseAccountAPI {
 
       if (info.gasLimit) {
         batchTxDetail.gasLimit = BigNumber.from(batchTxDetail.gasLimit).add(
-          info.gasLimit
+          BigNumber.from(info.gasLimit)
         );
       }
-      if (info.maxFeePerGas) {
-        batchTxDetail.maxFeePerGas = BigNumber.from(
-          batchTxDetail.maxFeePerGas
-        ).add(info.maxFeePerGas);
-      }
-      if (info.maxPriorityFeePerGas) {
-        batchTxDetail.maxPriorityFeePerGas = BigNumber.from(
-          batchTxDetail.maxPriorityFeePerGas
-        ).add(info.maxPriorityFeePerGas);
-      }
+      batchTxDetail.maxFeePerGas = maxFeePerGas
+      batchTxDetail.maxPriorityFeePerGas = maxPriorityFeePerGas
     });
 
     const accountContract = await this._getAccountContract();
@@ -182,7 +185,7 @@ export class SimpleAccountAPI extends BaseAccountAPI {
     batchTxDetail.data = data;
 
     return await this.signUserOp(
-      await this.createUnsignedUserOp(batchTxDetail)
+      await this.createUnsignedBatchUserOp(batchTxDetail)
     );
   }
 

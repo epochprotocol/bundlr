@@ -316,6 +316,67 @@ export abstract class BaseAccountAPI {
   }
 
   /**
+   * create a UserOperation, filling all details (except signature)
+   * - if account is not yet created, add initCode to deploy it.
+   * - if gas or nonce are missing, read them from the chain (note that we can't fill gaslimit before the account is created)
+   * @param info
+   */
+  async createUnsignedBatchUserOp(
+    info: TransactionDetailsForAdvancedUserOp,
+  ): Promise<AdvancedUserOperationStruct> {
+    const { callData, callGasLimit } =
+      await this.encodeUserOpCallDataAndGasLimit(info);
+    const initCode = await this.getInitCode();
+
+    const initGas = await this.estimateCreationGas(initCode);
+    const verificationGasLimit = BigNumber.from(
+      await this.getVerificationGasLimit(),
+    ).add(initGas);
+
+    let { maxFeePerGas, maxPriorityFeePerGas } = info;
+    if (maxFeePerGas == null || maxPriorityFeePerGas == null) {
+      const feeData = await this.provider.getFeeData();
+      if (maxFeePerGas == null) {
+        maxFeePerGas = feeData.maxFeePerGas ?? undefined;
+      }
+      if (maxPriorityFeePerGas == null) {
+        maxPriorityFeePerGas = feeData.maxPriorityFeePerGas ?? undefined;
+      }
+    }
+
+    const partialUserOp: any = {
+      sender: this.getAccountAddress(),
+      nonce: info.nonce ?? this.getNonce(),
+      initCode,
+      callData: info.data,
+      callGasLimit,
+      verificationGasLimit,
+      maxFeePerGas,
+      maxPriorityFeePerGas,
+      paymasterAndData: "0x",
+      advancedUserOperation: info.advancedUserOperation,
+    };
+
+    let paymasterAndData: string | undefined;
+    if (this.paymasterAPI != null) {
+      // fill (partial) preVerificationGas (all except the cost of the generated paymasterAndData)
+      const userOpForPm = {
+        ...partialUserOp,
+        preVerificationGas: await this.getPreVerificationGas(partialUserOp),
+      };
+      paymasterAndData = await this.paymasterAPI.getPaymasterAndData(
+        userOpForPm,
+      );
+    }
+    partialUserOp.paymasterAndData = paymasterAndData ?? "0x";
+    return {
+      ...partialUserOp,
+      preVerificationGas: this.getPreVerificationGas(partialUserOp),
+      signature: "",
+    };
+  }
+
+  /**
    * Sign the filled userOp.
    * @param userOp the UserOperation to sign (with signature field ignored)
    */
