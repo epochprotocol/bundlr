@@ -1,10 +1,14 @@
 import {
-  SimpleAccount,
-  SimpleAccountFactory,
-  SimpleAccountFactory__factory,
-  SimpleAccount__factory,
-} from "@account-abstraction/contracts";
+  EpochRegistry,
+  EpochRegistry__factory,
+  EpochWallet,
+  EpochWalletFactory,
+  EpochWalletFactory__factory,
+  EpochWallet__factory
+} from "@epoch-protocol/accountabstraction/typechain";
+
 import { BigNumber, BigNumberish } from "ethers";
+import { DataSource, DataType, ExecutionWindow, OnChainCondition, isExecutionWindow, isOnChainCondition } from "./interfaces";
 
 import { Signer } from "@ethersproject/abstract-signer";
 import { arrayify, hexConcat } from "ethers/lib/utils";
@@ -22,6 +26,7 @@ export interface SimpleAccountApiParams extends BaseApiParams {
   owner: Signer;
   factoryAddress?: string;
   index?: BigNumberish;
+  registryAddress?: string;
 }
 
 /**
@@ -40,25 +45,38 @@ export class SimpleAccountAPI extends BaseAccountAPI {
    * our account contract.
    * should support the "execFromEntryPoint" and "nonce" methods
    */
-  accountContract?: SimpleAccount;
+  accountContract?: EpochWallet;
 
-  factory?: SimpleAccountFactory;
+  factory?: EpochWalletFactory;
+  registryAddress?: string;
+  registry?: EpochRegistry;
 
   constructor(params: SimpleAccountApiParams) {
     super(params);
     this.factoryAddress = params.factoryAddress;
     this.owner = params.owner;
+    this.registryAddress = params.registryAddress;
     this.index = BigNumber.from(params.index ?? 0);
   }
 
-  async _getAccountContract(): Promise<SimpleAccount> {
+  async _getAccountContract(): Promise<EpochWallet> {
     if (this.accountContract == null) {
-      this.accountContract = SimpleAccount__factory.connect(
+      this.accountContract = EpochWallet__factory.connect(
         await this.getAccountAddress(),
         this.provider,
       );
     }
     return this.accountContract;
+  }
+
+  async _getRegistry(): Promise<EpochRegistry> {
+    if (this.registry == null) {
+      this.registry = EpochRegistry__factory.connect(
+        await this.registryAddress!,
+        this.provider,
+      );
+    }
+    return this.registry;
   }
 
   /**
@@ -68,7 +86,7 @@ export class SimpleAccountAPI extends BaseAccountAPI {
   async getAccountInitCode(): Promise<string> {
     if (this.factory == null) {
       if (this.factoryAddress != null && this.factoryAddress !== "") {
-        this.factory = SimpleAccountFactory__factory.connect(
+        this.factory = EpochWalletFactory__factory.connect(
           this.factoryAddress,
           this.provider,
         );
@@ -111,8 +129,8 @@ export class SimpleAccountAPI extends BaseAccountAPI {
     dataSource: DataSource,
     targets: string[],
   ): Promise<BigNumberish> {
-    const accountContract = await this._getAccountContract();
-    return accountContract.interface.encodeFunctionData("addTask", [
+    const registry = await this._getRegistry();
+    return registry.interface.encodeFunctionData("addTask", [
       destination,
       isBatchTransaction,
       executionWindowCondition,
@@ -170,11 +188,13 @@ export class SimpleAccountAPI extends BaseAccountAPI {
    */
   async encodeExecuteBatch(
     targets: string[],
+    values: BigNumberish[],
     datas: string[]
   ): Promise<string> {
     const accountContract = await this._getAccountContract();
     return accountContract.interface.encodeFunctionData("executeBatch", [
       targets,
+      values,
       datas,
     ]);
   }
@@ -251,6 +271,7 @@ export class SimpleAccountAPI extends BaseAccountAPI {
     const accountContract = await this._getAccountContract();
     const data = accountContract.interface.encodeFunctionData("executeBatch", [
       targets,
+      values,
       datas,
     ]);
 
@@ -299,16 +320,11 @@ export class SimpleAccountAPI extends BaseAccountAPI {
 
 
     var demoOnChainCondition: OnChainCondition;
-    const demoFunc: IConditionChecker = {
-      async checkCondition(userInput: Uint8Array, onChainCondition: Uint8Array): Promise<boolean> {
-        return true;
-      }
-    };
     demoOnChainCondition = {
       useOnChainCondition: false,
       dataPosition: 0,
       dataSource: "",
-      conditionChecker: demoFunc,
+      conditionChecker: "",
       dataType: DataType.STRING,
       encodedQuery: "",
       encodedCondition: "",
@@ -404,16 +420,11 @@ export class SimpleAccountAPI extends BaseAccountAPI {
     });
 
     var demoOnChainCondition: OnChainCondition;
-    const demoFunc: IConditionChecker = {
-      async checkCondition(userInput: Uint8Array, onChainCondition: Uint8Array): Promise<boolean> {
-        return true;
-      }
-    };
     demoOnChainCondition = {
       useOnChainCondition: false,
       dataPosition: 0,
       dataSource: "",
-      conditionChecker: demoFunc,
+      conditionChecker: "",
       dataType: DataType.STRING,
       encodedQuery: "",
       encodedCondition: "",

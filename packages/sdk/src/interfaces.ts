@@ -1,4 +1,4 @@
-
+import { IEpochRegistry } from "@epoch-protocol/accountabstraction/typechain";
 
 enum DataType {
     STRING,
@@ -18,33 +18,15 @@ enum DataType {
     BOOL_DYNAMIC_ARRAY
 }
 
-interface ExecutionWindow {
-    useExecutionWindow: boolean;
-    recurring: boolean;
-    recurrenceGap: number;
-    executionWindowStart: number;
-    executionWindowEnd: number;
-}
-interface IConditionChecker {
-    checkCondition(userInput: Uint8Array, onChainCondition: Uint8Array): Promise<boolean>;
+interface ExecutionWindow extends IEpochRegistry.ExecutionWindowStruct {
 }
 
-interface OnChainCondition {
-    useOnChainCondition: boolean;
-    dataPosition: number;
-    dataSource: string;
-    conditionChecker: IConditionChecker;
-    dataType: DataType;
-    encodedQuery: string;
-    encodedCondition: string;
+
+interface OnChainCondition extends IEpochRegistry.OnChainConditionStruct {
+
 }
 
-interface DataSource {
-    useDataSource: boolean;
-    dataPosition: number;
-    positionInCallData: number;
-    dataSource: string;
-    encodedQuery: string;
+interface DataSource extends IEpochRegistry.DataSourceStruct {
 }
 
 function isExecutionWindow(arg: ExecutionWindow | OnChainCondition): arg is ExecutionWindow {
@@ -54,3 +36,5 @@ function isExecutionWindow(arg: ExecutionWindow | OnChainCondition): arg is Exec
 function isOnChainCondition(arg: ExecutionWindow | OnChainCondition): arg is OnChainCondition {
     return (arg as OnChainCondition).useOnChainCondition !== undefined;
 }
+
+export { DataSource, DataType, ExecutionWindow, OnChainCondition, isExecutionWindow, isOnChainCondition };
