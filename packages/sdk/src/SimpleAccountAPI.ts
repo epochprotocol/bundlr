@@ -49,6 +49,7 @@ export class SimpleAccountAPI extends BaseAccountAPI {
 
   factory?: EpochWalletFactory;
   registryAddress?: string;
+  // TODO remove this nullable check
   registry?: EpochRegistry;
 
   constructor(params: SimpleAccountApiParams) {
