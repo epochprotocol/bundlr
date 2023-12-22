@@ -8,6 +8,11 @@ import {
   SimpleAccountFactory__factory,
 } from "@account-abstraction/contracts";
 
+import {
+  SAFEDeployer__factory,
+  SAFEDeployer,
+} from "@epoch-protocol/account-abstraction-contracts";
+
 import { arrayify, hexConcat } from "ethers/lib/utils";
 import { Signer } from "@ethersproject/abstract-signer";
 import { BaseApiParams, BaseAccountAPI } from "./BaseAccountAPI";
@@ -44,7 +49,7 @@ export class SimpleAccountAPI extends BaseAccountAPI {
 
   entrypointContract?: EntryPoint;
 
-  factory?: SimpleAccountFactory;
+  factory?: SAFEDeployer;
 
   constructor(params: SimpleAccountApiParams) {
     super(params);
@@ -84,7 +89,7 @@ export class SimpleAccountAPI extends BaseAccountAPI {
   async getAccountInitCode(): Promise<string> {
     if (this.factory == null) {
       if (this.factoryAddress != null && this.factoryAddress !== "") {
-        this.factory = SimpleAccountFactory__factory.connect(
+        this.factory = SAFEDeployer__factory.connect(
           this.factoryAddress,
           this.provider
         );
@@ -94,7 +99,7 @@ export class SimpleAccountAPI extends BaseAccountAPI {
     }
     return hexConcat([
       this.factory.address,
-      this.factory.interface.encodeFunctionData("createAccount", [
+      this.factory.interface.encodeFunctionData("deploySafe", [
         await this.owner.getAddress(),
         this.index,
       ]),

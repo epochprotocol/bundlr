@@ -1,6 +1,6 @@
 {
   "name": "@epoch-protocol/sdk",
-  "version": "0.8.7",
+  "version": "0.8.8",
   "main": "./dist/src/index.js",
   "license": "MIT",
   "files": [
@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@account-abstraction/contracts": "^0.6.0",
+    "@epoch-protocol/account-abstraction-contracts": "^0.5.0",
     "@epoch-protocol/utils": "^0.6.2",
     "@ethersproject/abstract-provider": "^5.7.0",
     "@ethersproject/abstract-signer": "^5.7.0",
