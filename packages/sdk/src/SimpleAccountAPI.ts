@@ -4,8 +4,6 @@ import {
   EntryPoint__factory,
   SimpleAccount,
   SimpleAccount__factory,
-  SimpleAccountFactory,
-  SimpleAccountFactory__factory,
 } from "@account-abstraction/contracts";
 
 import {
