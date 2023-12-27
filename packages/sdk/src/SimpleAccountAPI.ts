@@ -1,19 +1,18 @@
-import { BigNumber, BigNumberish } from "ethers";
+import { BigNumberish } from "ethers";
 import {
   EntryPoint,
   EntryPoint__factory,
   SimpleAccount,
+  SimpleAccountFactory,
+  SimpleAccountFactory__factory,
   SimpleAccount__factory,
 } from "@account-abstraction/contracts";
-
-import {
-  SAFEDeployer__factory,
-  SAFEDeployer,
-} from "@epoch-protocol/account-abstraction-contracts";
 
 import { arrayify, hexConcat } from "ethers/lib/utils";
 import { Signer } from "@ethersproject/abstract-signer";
 import { BaseApiParams, BaseAccountAPI } from "./BaseAccountAPI";
+import { BigNumber } from "ethers/lib/ethers";
+import { ethers } from "hardhat";
 
 /**
  * constructor params, added no top of base params:
@@ -24,7 +23,7 @@ import { BaseApiParams, BaseAccountAPI } from "./BaseAccountAPI";
 export interface SimpleAccountApiParams extends BaseApiParams {
   owner: Signer;
   factoryAddress?: string;
-  index?: BigNumberish;
+  index?: BigNumber;
 }
 
 /**
@@ -47,7 +46,7 @@ export class SimpleAccountAPI extends BaseAccountAPI {
 
   entrypointContract?: EntryPoint;
 
-  factory?: SAFEDeployer;
+  factory?: SimpleAccountFactory;
 
   constructor(params: SimpleAccountApiParams) {
     super(params);
@@ -87,7 +86,7 @@ export class SimpleAccountAPI extends BaseAccountAPI {
   async getAccountInitCode(): Promise<string> {
     if (this.factory == null) {
       if (this.factoryAddress != null && this.factoryAddress !== "") {
-        this.factory = SAFEDeployer__factory.connect(
+        this.factory = SimpleAccountFactory__factory.connect(
           this.factoryAddress,
           this.provider
         );
@@ -95,9 +94,10 @@ export class SimpleAccountAPI extends BaseAccountAPI {
         throw new Error("no factory to get initCode");
       }
     }
+    abiCoder = new ethers.utils.AbiCoder();
     return hexConcat([
       this.factory.address,
-      this.factory.interface.encodeFunctionData("deploySafe", [
+      this.factory.interface.encodeFunctionData("createAccount", [
         await this.owner.getAddress(),
         this.index,
       ]),
