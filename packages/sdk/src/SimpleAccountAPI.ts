@@ -94,7 +94,6 @@ export class SimpleAccountAPI extends BaseAccountAPI {
         throw new Error("no factory to get initCode");
       }
     }
-    abiCoder = new ethers.utils.AbiCoder();
     return hexConcat([
       this.factory.address,
       this.factory.interface.encodeFunctionData("createAccount", [

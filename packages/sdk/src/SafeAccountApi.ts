@@ -15,8 +15,6 @@ import {
 import { arrayify } from "ethers/lib/utils";
 export interface SafeAccountParams extends BaseApiParams {
   owner: Signer;
-  factoryAddress?: string;
-  index?: BigNumberish;
   salt?: string;
 }
 export class SafeAccountApi extends BaseAccountAPI {
@@ -94,6 +92,7 @@ export class SafeAccountApi extends BaseAccountAPI {
   }
   async getCounterFactualAddress(): Promise<string> {
     let safeFactory = await this._getSafeFactory();
+    console.log("Safe factory", safeFactory.getAddress());
     let defaultConfig = await safeDefaultConfig(
       await this.owner.getAddress(),
       await this.owner.getChainId()
@@ -131,8 +130,10 @@ export class SafeAccountApi extends BaseAccountAPI {
     if (this.safeFactory) {
       return this.safeFactory;
     } else {
+      console.log("eth adapter", await this.ethAdapter.getChainId());
       const _safeFactory = await SafeFactory.create({
         ethAdapter: this.ethAdapter,
+        safeVersion: "1.4.1",
       });
       this.safeFactory = _safeFactory;
       return this.safeFactory;
