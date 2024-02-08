@@ -7,7 +7,7 @@ import { initCode } from "./safeConstants";
 import { HttpRpcClient } from "../src";
 
 import { DEFAULT_MNEMONIC } from "../hardhat.config";
-import { ERC20_ABI } from "../src/SafeAbis";
+import { ERC20_ABI, MultisendAbi } from "../src/SafeAbis";
 import { TransactionDetailsForMultisend } from "../src/TransactionDetailsForUserOp";
 
 const provider = ethers.provider;
@@ -153,12 +153,14 @@ describe("SafeAccountAPI", () => {
       ]
     );
     const dataForComparision = "0x" + encodedTx.slice(2) + encodedTx.slice(2);
-
+    const multisendInterface = new ethers.utils.Interface(MultisendAbi);
+    const safeProxyFactoryEncodedCallData =
+      multisendInterface.encodeFunctionData("multiSend", [dataForComparision]);
     const encodedData = safeApi.encodeForMultiSend(
       [dataForMultisend, dataForMultisend],
       137
     );
-    assert.equal(dataForComparision, encodedData?.data);
+    assert.equal(safeProxyFactoryEncodedCallData, encodedData?.data);
     assert.deepEqual(BigNumber.from("0"), encodedData?.value);
     assert.equal(safeDefaultConfig[137].multisend, encodedData?.target);
   });
