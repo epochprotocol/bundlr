@@ -15,6 +15,7 @@ import { PaymasterAPI } from "./PaymasterAPI";
 import { getUserOpHash, NotPromise, packUserOp } from "@epoch-protocol/utils";
 import { calcPreVerificationGas, GasOverheads } from "./calcPreVerificationGas";
 import { safeDefaultConfig } from "./SafeDefaultConfig";
+import { MultisendAbi } from "./SafeAbis";
 
 export interface BaseApiParams {
   provider: Provider;
@@ -374,7 +375,8 @@ export abstract class BaseAccountAPI {
    */
   encodeForMultiSend(
     txInfoArray: Array<TransactionDetailsForMultisend>,
-    chainId: number
+    chainId: number,
+    multisendAddress?: string
   ): TransactionDetailsForMultisend | null {
     let multisendCall = "0x";
     txInfoArray.forEach((info) => {
@@ -399,12 +401,16 @@ export abstract class BaseAccountAPI {
       ]);
       multisendCall = multisendCall.concat(encodedTx.slice(2));
     });
-    let multisendAddress = safeDefaultConfig[chainId]?.multisend;
-    if (multisendAddress) {
+    let _multisendAddress =
+      multisendAddress ?? safeDefaultConfig[chainId]?.multisend;
+    if (_multisendAddress) {
+      const multisendInterface = new ethers.utils.Interface(MultisendAbi);
+      const safeProxyFactoryEncodedCallData =
+        multisendInterface.encodeFunctionData("multiSend", [multisendCall]);
       return {
-        data: multisendCall,
+        data: safeProxyFactoryEncodedCallData,
         value: BigNumber.from("0"),
-        target: multisendAddress,
+        target: _multisendAddress,
       };
     }
     return null;
