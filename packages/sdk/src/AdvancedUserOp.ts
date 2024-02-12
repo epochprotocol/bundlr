@@ -4,15 +4,15 @@ import { BigNumberish } from "ethers";
 export interface AdvancedUserOperationStruct extends UserOperationStruct {
   advancedUserOperation?: AdvancedUserOperations;
 }
-export class AdvancedUserOperations {
+export interface AdvancedUserOperations {
   executionTimeWindow?: ExecutionTimeWindow;
   triggerEvent?: TriggerEvent;
 }
-export class ExecutionTimeWindow {
+export interface ExecutionTimeWindow {
   executionWindowStart?: BigNumberish;
   executionWindowEnd?: BigNumberish;
 }
-export class TriggerEvent {
+export interface TriggerEvent {
   contractAddress?: string;
   eventSignature?: string;
   evaluationStatement?: string;
