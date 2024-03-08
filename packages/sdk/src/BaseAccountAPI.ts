@@ -264,18 +264,24 @@ export abstract class BaseAccountAPI {
     info: TransactionDetailsForUserOp,
     delegateCall?: boolean
   ): Promise<UserOperationStruct> {
-    const { callData, callGasLimit } =
-      await this.encodeUserOpCallDataAndGasLimit(info, delegateCall);
-    const initCode = await this.getInitCode();
+    const initialPromises = await Promise.all([
+      this.encodeUserOpCallDataAndGasLimit(info, delegateCall),
+      this.getInitCode(),
+      await this.getVerificationGasLimit(),
+      this.provider.getFeeData(),
+    ]);
+    const { callData, callGasLimit } = initialPromises[0];
+
+    const initCode = initialPromises[1];
 
     const initGas = await this.estimateCreationGas(initCode);
-    const verificationGasLimit = BigNumber.from(
-      await this.getVerificationGasLimit()
-    ).add(initGas);
+    const verificationGasLimit = BigNumber.from(initialPromises[2]).add(
+      initGas
+    );
 
     let { maxFeePerGas, maxPriorityFeePerGas } = info;
     if (maxFeePerGas == null || maxPriorityFeePerGas == null) {
-      const feeData = await this.provider.getFeeData();
+      const feeData = initialPromises[3];
       if (maxFeePerGas == null) {
         maxFeePerGas = feeData.maxFeePerGas ?? undefined;
       }
