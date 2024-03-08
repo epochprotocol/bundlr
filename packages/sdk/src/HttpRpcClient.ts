@@ -27,13 +27,10 @@ export class HttpRpcClient {
     readonly entryPointAddress: string,
     readonly chainId: number
   ) {
-    this.userOpJsonRpcProvider = new ethers.providers.JsonRpcProvider(
-      this.bundlerUrl,
-      {
-        name: "Connected bundler network",
-        chainId,
-      }
-    );
+    this.userOpJsonRpcProvider = new ethers.providers.JsonRpcProvider({
+      url: this.bundlerUrl,
+      skipFetchSetup: true,
+    });
     this.initializing = this.validateChainId();
   }
 
