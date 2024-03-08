@@ -267,7 +267,7 @@ export abstract class BaseAccountAPI {
     const initialPromises = await Promise.all([
       this.encodeUserOpCallDataAndGasLimit(info, delegateCall),
       this.getInitCode(),
-      await this.getVerificationGasLimit(),
+      this.getVerificationGasLimit(),
       this.provider.getFeeData(),
     ]);
     const { callData, callGasLimit } = initialPromises[0];
