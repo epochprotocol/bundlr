@@ -16,6 +16,7 @@ import {
 } from "./SafeAbis";
 import { generateAddress2, keccak256, toBuffer } from "ethereumjs-util";
 import { JsonRpcSigner } from "@ethersproject/providers";
+import { AdvancedUserOperationStruct } from "./AdvancedUserOp";
 
 export interface SafeAccountApiParams extends BaseApiParams {
   owner: Signer;
@@ -177,6 +178,51 @@ export class SafeAccountAPI extends BaseAccountAPI {
     const validAfter = BigNumber.from(Math.floor(Date.now() / 1000));
     // Valid Until 365 days
     const validUntil = validAfter.add(31536000);
+
+    const safeUserOperation: SafeUserOperation = {
+      safe: await userOp.sender,
+      nonce: await userOp.nonce,
+      initCode: await userOp.initCode,
+      callData: await userOp.callData,
+      callGasLimit: await userOp.callGasLimit,
+      verificationGasLimit: await userOp.verificationGasLimit,
+      preVerificationGas: await userOp.preVerificationGas,
+      maxFeePerGas: await userOp.maxFeePerGas,
+      maxPriorityFeePerGas: await userOp.maxPriorityFeePerGas,
+      paymasterAndData: await userOp.paymasterAndData,
+      entryPoint: this.entryPointAddress,
+      validAfter,
+      validUntil,
+    };
+
+    const signature = this.buildSignatureBytes([
+      await this.signSafeOp(
+        this.owner,
+        this.safeConfig.aaModule,
+        safeUserOperation,
+        await this.owner.getChainId()
+      ),
+    ]);
+
+    userOp.signature = ethers.utils.solidityPack(
+      ["uint48", "uint48", "bytes"],
+      [validAfter, validUntil, signature]
+    );
+
+    return userOp;
+  }
+  async signUseAdvanced(
+    userOp: AdvancedUserOperationStruct
+  ): Promise<AdvancedUserOperationStruct> {
+    const validAfter = BigNumber.from(
+      userOp.advancedUserOperation?.executionTimeWindow?.executionWindowStart ??
+        BigNumber.from(Math.floor(Date.now() / 1000)).toString()
+    );
+    // Valid Until 365 days
+    const validUntil = BigNumber.from(
+      userOp.advancedUserOperation?.executionTimeWindow?.executionWindowEnd ??
+        validAfter.add(31536000).toString()
+    );
 
     const safeUserOperation: SafeUserOperation = {
       safe: await userOp.sender,
