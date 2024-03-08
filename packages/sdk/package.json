@@ -1,6 +1,6 @@
 {
   "name": "@epoch-protocol/sdk",
-  "version": "0.9.29",
+  "version": "0.9.30",
   "main": "./dist/src/index.js",
   "license": "MIT",
   "files": [
