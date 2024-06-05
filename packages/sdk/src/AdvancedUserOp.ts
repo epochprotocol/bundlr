@@ -7,6 +7,7 @@ export interface AdvancedUserOperationStruct extends UserOperationStruct {
 export class AdvancedUserOperations {
   executionTimeWindow?: ExecutionTimeWindow;
   triggerEvent?: TriggerEvent;
+  userOpDependency?: UserOpDependency;
 }
 export class ExecutionTimeWindow {
   executionWindowStart?: BigNumberish;
@@ -16,4 +17,8 @@ export class TriggerEvent {
   contractAddress?: string;
   eventSignature?: string;
   evaluationStatement?: string;
+}
+export class UserOpDependency {
+  userOpHash!: string;
+  bufferTime!: BigNumberish;
 }
