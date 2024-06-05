@@ -15,6 +15,7 @@ import { PaymasterAPI } from "./PaymasterAPI";
 import { getUserOpHash, NotPromise, packUserOp } from "@epoch-protocol/utils";
 import { calcPreVerificationGas, GasOverheads } from "./calcPreVerificationGas";
 import { safeDefaultConfig } from "./SafeDefaultConfig";
+import { MultisendAbi } from "./SafeAbis";
 
 export interface BaseApiParams {
   provider: Provider;
@@ -165,7 +166,7 @@ export abstract class BaseAccountAPI {
    * NOTE: createUnsignedUserOp will add to this value the cost of creation, if the contract is not yet created.
    */
   async getVerificationGasLimit(): Promise<BigNumberish> {
-    return 100000;
+    return 3000000;
   }
 
   /**
@@ -263,18 +264,24 @@ export abstract class BaseAccountAPI {
     info: TransactionDetailsForUserOp,
     delegateCall?: boolean
   ): Promise<UserOperationStruct> {
-    const { callData, callGasLimit } =
-      await this.encodeUserOpCallDataAndGasLimit(info, delegateCall);
-    const initCode = await this.getInitCode();
+    const initialPromises = await Promise.all([
+      this.encodeUserOpCallDataAndGasLimit(info, delegateCall),
+      this.getInitCode(),
+      this.getVerificationGasLimit(),
+      this.provider.getFeeData(),
+    ]);
+    const { callData, callGasLimit } = initialPromises[0];
+
+    const initCode = initialPromises[1];
 
     const initGas = await this.estimateCreationGas(initCode);
-    const verificationGasLimit = BigNumber.from(
-      await this.getVerificationGasLimit()
-    ).add(initGas);
+    const verificationGasLimit = BigNumber.from(initialPromises[2]).add(
+      initGas
+    );
 
     let { maxFeePerGas, maxPriorityFeePerGas } = info;
     if (maxFeePerGas == null || maxPriorityFeePerGas == null) {
-      const feeData = await this.provider.getFeeData();
+      const feeData = initialPromises[3];
       if (maxFeePerGas == null) {
         maxFeePerGas = feeData.maxFeePerGas ?? undefined;
       }
@@ -374,7 +381,8 @@ export abstract class BaseAccountAPI {
    */
   encodeForMultiSend(
     txInfoArray: Array<TransactionDetailsForMultisend>,
-    chainId: number
+    chainId: number,
+    multisendAddress?: string
   ): TransactionDetailsForMultisend | null {
     let multisendCall = "0x";
     txInfoArray.forEach((info) => {
@@ -399,12 +407,16 @@ export abstract class BaseAccountAPI {
       ]);
       multisendCall = multisendCall.concat(encodedTx.slice(2));
     });
-    let multisendAddress = safeDefaultConfig[chainId]?.multisend;
-    if (multisendAddress) {
+    let _multisendAddress =
+      multisendAddress ?? safeDefaultConfig[chainId]?.multisend;
+    if (_multisendAddress) {
+      const multisendInterface = new ethers.utils.Interface(MultisendAbi);
+      const safeProxyFactoryEncodedCallData =
+        multisendInterface.encodeFunctionData("multiSend", [multisendCall]);
       return {
-        data: multisendCall,
+        data: safeProxyFactoryEncodedCallData,
         value: BigNumber.from("0"),
-        target: multisendAddress,
+        target: _multisendAddress,
       };
     }
     return null;
