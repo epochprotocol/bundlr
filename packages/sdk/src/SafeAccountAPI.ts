@@ -73,6 +73,12 @@ export class SafeAccountAPI extends BaseAccountAPI {
     );
     return safeProxy;
   }
+  //Connect with SAFE directly, double check if safe is already deployed and has 4337 support.
+  async connectSafe(safeAddress: string): Promise<ethers.Contract> {
+    const safeInterface = new ethers.utils.Interface(SafeAbi);
+    const safeProxy = new ethers.Contract(safeAddress, safeInterface);
+    return safeProxy;
+  }
 
   async _getEntrypointContract(): Promise<EntryPoint> {
     return this.entrypointContract;
